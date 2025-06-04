@@ -7,7 +7,7 @@
 
 
 
-#include <Proximity_Motion_Detection_inferencing.h>                // Unified sensor interface used by Adafruit libraries
+#include <Proximity_Motion_Detection_inferencing.h>                //Edge impulse trained model library
 // #include <GyverOLED.h>
 
 
@@ -17,9 +17,16 @@
 #include <Wire.h>
 #include <VL53L0X.h>
 
-VL53L0X sensor;
+VL53L0X sensor;  //Initializing the sensor object for its appropriate usage
 
-float distanceCm;
+
+// defining variables to store and calculate the heart rate sensed by the sensor.
+float distanceCm; 
+static unsigned long last_interval_ms = 0;    
+unsigned long labelStartTime = 0;
+String currentLabel = "";
+String lastLabel = "";
+const unsigned long thresholdTime = 500; 
 
 // === Define Sampling Parameters ===
 #define FREQUENCY_HZ 9                          // Sampling rate: 60 times per second
@@ -27,23 +34,21 @@ float distanceCm;
 
 #define TFT_CS   33  // Chip Select control pin
 #define TFT_DC    25  // Data/Command select pin
-#define TFT_RST   26  // Reset pin (or connect to RST, see below)
+#define TFT_RST   26  // Reset pin 
 
-Adafruit_ST7789 display = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ST7789 display = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST); // Initializing the LED object for its appropriate usage.
 
 float features[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];  // Buffer to store sampled features
 size_t feature_ix = 0;                               // Current index in the features buffer
-static unsigned long last_interval_ms = 0;    
-unsigned long labelStartTime = 0;
-String currentLabel = "";
-String lastLabel = "";
-const unsigned long thresholdTime = 500; 
+
 
 void setup() {
-  Serial.begin(115200);  // Initialize serial communication at 115200 baud
-  display.init(170, 320);
+  Serial.begin(115200);  // Initialize serial communication at 115200 baud for debugging
+  display.init(170, 320);  //Intializing and configuring the sensor using the object(tft).
   display.setRotation(3);  
 
+
+  // checking sensor working or not
   sensor.setTimeout(500);
   if (!sensor.init())
   {
